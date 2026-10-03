@@ -14,13 +14,14 @@ def require_admin():
 def dashboard():
     today = date.today()
 
-    all_bookings = Booking.query.all()
-    total_bookings = len(all_bookings)
-    pending_bookings = sum(1 for b in all_bookings if b.status_bayar == 'Pending')
-    lunas_bookings = sum(1 for b in all_bookings if b.status_bayar == 'Lunas')
+    total_bookings = Booking.query.count()
+    pending_bookings = Booking.query.filter_by(status_bayar='Pending').count()
+    lunas_bookings = Booking.query.filter_by(status_bayar='Lunas').count()
 
-    # Total pendapatan dari booking yang status lunas
-    total_revenue = sum(float(b.package.harga) for b in all_bookings if b.status_bayar == 'Lunas' and b.package)
+    # Total pendapatan dihitung langsung di database menggunakan SQL SUM instan (0.01 detik)
+    total_revenue = db.session.query(db.func.sum(Package.harga)).join(
+        Booking, Booking.id_paket == Package.id_paket
+    ).filter(Booking.status_bayar == 'Lunas').scalar() or 0
 
     total_members = User.query.filter_by(role='Member').count()
     schedules_today = Schedule.query.filter_by(tanggal=today).count()

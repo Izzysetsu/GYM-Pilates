@@ -42,12 +42,12 @@ class Config:
                 "ssl_context": ssl_ctx,
                 "timeout": 8
             },
-            "pool_pre_ping": True,
+            "pool_pre_ping": False,
             "pool_recycle": 280,
         }
     elif not database_url.startswith("sqlite"):
         SQLALCHEMY_ENGINE_OPTIONS = {
-            "pool_pre_ping": True,
+            "pool_pre_ping": False,
             "pool_recycle": 280,
         }
     else:

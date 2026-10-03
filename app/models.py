@@ -15,7 +15,6 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relasi
-    bookings = db.relationship('Booking', backref='user', lazy='dynamic', cascade='all, delete-orphan')
 
     def set_password(self, raw_password):
         self.password = generate_password_hash(raw_password)
@@ -41,7 +40,6 @@ class Package(db.Model):
     deskripsi = db.Column(db.Text, nullable=True)
 
     # Relasi
-    bookings = db.relationship('Booking', backref='package', lazy='dynamic')
 
     @property
     def formatted_harga(self):
@@ -61,7 +59,6 @@ class Schedule(db.Model):
     kapasitas_maks = db.Column(db.Integer, nullable=False, default=10)
 
     # Relasi
-    bookings = db.relationship('Booking', backref='schedule', lazy='dynamic')
 
     @property
     def booked_count(self):
@@ -97,8 +94,11 @@ class Booking(db.Model):
     status_bayar = db.Column(db.String(20), nullable=False, default='Pending') # 'Pending', 'Lunas', 'Batal'
     tanggal_booking = db.Column(db.DateTime, default=datetime.now)
 
-    # Relasi
-    attendance = db.relationship('Attendance', backref='booking', uselist=False, cascade='all, delete-orphan')
+    # Relasi dengan eager loading (lazy='joined') agar 1 query mengambil semua relasi
+    user = db.relationship('User', backref=db.backref('bookings', lazy='dynamic'), lazy='joined')
+    package = db.relationship('Package', backref=db.backref('bookings', lazy='dynamic'), lazy='joined')
+    schedule = db.relationship('Schedule', backref=db.backref('bookings', lazy='dynamic'), lazy='joined')
+    attendance = db.relationship('Attendance', backref=db.backref('booking', uselist=False), uselist=False, cascade='all, delete-orphan', lazy='joined')
 
     @property
     def kode_booking(self):
