@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrator - Zenith Pilates & Gym Studio{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <span class="badge" style="background: rgba(212, 175, 95, 0.15); color: var(--gold-light); border: 1px solid rgba(212, 175, 95, 0.3); margin-bottom: 0.5rem;">
+      Panel Kendali Studio
+    </span>
+    <h1 style="font-size: 2.2rem;">Dasbor Administrator</h1>
+    <p style="color: var(--text-muted);">Kelola operasional studio, paket latihan, penjadwalan instruktur, dan verifikasi presensi member.</p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="{{ url_for('admin.packages') }}" class="btn btn-outline btn-sm">Kelola Paket</a>
+    <a href="{{ url_for('admin.schedules') }}" class="btn btn-outline btn-sm">+ Jadwal Sesi</a>
+    <a href="{{ url_for('admin.attendance') }}" class="btn btn-sage btn-sm">Absensi Hari Ini</a>
+  </div>
+</div>
+
+<!-- Kartu Metrik Utama -->
+<div class="grid grid-cols-4" style="margin-bottom: 3rem;">
+  <div class="glass-panel" style="padding: 1.5rem; border-top: 3px solid var(--gold-light);">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Pendapatan Terverifikasi</div>
+    <div style="font-size: 1.8rem; font-weight: 800; color: var(--gold-light);">
+      Rp {{ "{:,}".format(total_revenue|int).replace(',', '.') }}
+    </div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Dari {{ lunas_bookings }} transaksi lunas</div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem; border-top: 3px solid var(--amber-warn);">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Perlu Verifikasi (Pending)</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--amber-warn);">{{ pending_bookings }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">
+      <a href="{{ url_for('admin.bookings', status='Pending') }}" style="color: var(--amber-warn); text-decoration: none;">Verifikasi sekarang &rarr;</a>
+    </div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem; border-top: 3px solid var(--sage-light);">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Total Pelanggan Terdaftar</div>
+    <div style="font-size: 2rem; font-weight: 800; color: #FFF;">{{ total_members }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Akun role member aktif</div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem; border-top: 3px solid #6EC6FF;">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Sesi Kelas Hari Ini</div>
+    <div style="font-size: 2rem; font-weight: 800; color: #82B1FF;">{{ schedules_today }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Tanggal {{ today.strftime('%d %b %Y') }}</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-3" style="margin-bottom: 3.5rem;">
+  <!-- Sesi Latihan Hari Ini -->
+  <div class="glass-panel" style="padding: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.2rem;">Sesi Hari Ini</h3>
+      <a href="{{ url_for('admin.schedules') }}" style="font-size: 0.8rem; color: var(--gold-light); text-decoration: none;">Semua Jadwal</a>
+    </div>
+
+    {% for sch in today_schedules %}
+      <div style="background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+          <strong style="color: var(--gold-light);">{{ sch.formatted_jam }} WIB</strong>
+          <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-muted);">
+            {{ sch.booked_count }} / {{ sch.kapasitas_maks }} Slot
+          </span>
+        </div>
+        <div style="font-size: 0.9rem; font-weight: 600;">Instruktur: {{ sch.instruktur }}</div>
+      </div>
+    {% else %}
+      <p style="color: var(--text-dim); font-size: 0.9rem; text-align: center; padding: 1.5rem;">Tidak ada jadwal sesi yang diagendakan untuk hari ini.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Transaksi Terkini -->
+  <div class="glass-panel" style="grid-column: span 2; padding: 1.75rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.2rem;">Transaksi Pemesanan Terbaru</h3>
+      <a href="{{ url_for('admin.bookings') }}" class="btn btn-outline btn-sm">Lihat Semua</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th>Member</th>
+            <th>Paket</th>
+            <th>Status</th>
+            <th>Aksi Cepat</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in recent_bookings %}
+            <tr>
+              <td><strong>{{ b.kode_booking }}</strong></td>
+              <td>{{ b.user.nama_lengkap }}</td>
+              <td>{{ b.package.nama_paket }}</td>
+              <td>
+                {% if b.status_bayar == 'Pending' %}
+                  <span class="badge badge-pending">Pending</span>
+                {% elif b.status_bayar == 'Lunas' %}
+                  <span class="badge badge-lunas">Lunas</span>
+                {% else %}
+                  <span class="badge badge-batal">Batal</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.35rem;">
+                  {% if b.status_bayar == 'Pending' %}
+                    <form method="POST" action="{{ url_for('admin.update_booking_status', id_booking=b.id_booking) }}">
+                      <input type="hidden" name="status_bayar" value="Lunas">
+                      <button type="submit" class="btn btn-sage btn-sm" title="Verifikasi Lunas">
+                        ✓ Lunas
+                      </button>
+                    </form>
+                  {% endif %}
+                  <a href="{{ url_for('member.receipt', id_booking=b.id_booking) }}" class="btn btn-outline btn-sm" target="_blank" title="Cetak Struk">
+                    Struk
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">
+                Belum ada transaksi pemesanan.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

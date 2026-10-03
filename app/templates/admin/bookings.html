@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Pemesanan & Transaksi - Admin Zenith Studio{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Semua Transaksi & Pemesanan</h1>
+    <p style="color: var(--text-muted);">Verifikasi bukti transfer member, ubah status pembayaran, dan terbitkan struk transaksi.</p>
+  </div>
+</div>
+
+<!-- Filter Status Tabs -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <a href="{{ url_for('admin.bookings') }}" class="btn btn-sm {% if not active_status %}btn-primary{% else %}btn-outline{% endif %}">
+    Semua
+  </a>
+  <a href="{{ url_for('admin.bookings', status='Pending') }}" class="btn btn-sm {% if active_status == 'Pending' %}btn-primary{% else %}btn-outline{% endif %}">
+    Perlu Verifikasi (Pending)
+  </a>
+  <a href="{{ url_for('admin.bookings', status='Lunas') }}" class="btn btn-sm {% if active_status == 'Lunas' %}btn-primary{% else %}btn-outline{% endif %}">
+    Lunas
+  </a>
+  <a href="{{ url_for('admin.bookings', status='Batal') }}" class="btn btn-sm {% if active_status == 'Batal' %}btn-primary{% else %}btn-outline{% endif %}">
+    Dibatalkan
+  </a>
+</div>
+
+<div class="glass-panel" style="overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Kode Booking</th>
+          <th>Nama Member</th>
+          <th>Paket Layanan</th>
+          <th>Jadwal Sesi</th>
+          <th>Total Biaya</th>
+          <th>Status Bayar</th>
+          <th>Ubah Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+          <tr>
+            <td>
+              <strong style="color: var(--gold-light);">{{ b.kode_booking }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">{{ b.tanggal_booking.strftime('%d/%m/%y %H:%M') }}</div>
+            </td>
+            <td>
+              <strong style="color: #FFF;">{{ b.user.nama_lengkap }}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">{{ b.user.email }}</div>
+            </td>
+            <td>
+              <div>{{ b.package.nama_paket }}</div>
+              <small style="color: var(--text-dim);">{{ b.package.kuota_sesi }} Sesi</small>
+            </td>
+            <td>
+              <div style="font-weight: 600;">{{ b.schedule.formatted_tanggal }}</div>
+              <small style="color: var(--text-dim);">{{ b.schedule.formatted_jam }} WIB &bull; Coach {{ b.schedule.instruktur }}</small>
+            </td>
+            <td>
+              <strong>{{ b.package.formatted_harga }}</strong>
+            </td>
+            <td>
+              {% if b.status_bayar == 'Pending' %}
+                <span class="badge badge-pending">Pending</span>
+              {% elif b.status_bayar == 'Lunas' %}
+                <span class="badge badge-lunas">Lunas</span>
+              {% else %}
+                <span class="badge badge-batal">Batal</span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="POST" action="{{ url_for('admin.update_booking_status', id_booking=b.id_booking) }}" style="display: flex; gap: 0.35rem; align-items: center;">
+                <select name="status_bayar" class="form-control" style="padding: 0.35rem 0.5rem; font-size: 0.8rem; width: auto;" onchange="this.form.submit()">
+                  <option value="Pending" {% if b.status_bayar == 'Pending' %}selected{% endif %}>Pending</option>
+                  <option value="Lunas" {% if b.status_bayar == 'Lunas' %}selected{% endif %}>Lunas</option>
+                  <option value="Batal" {% if b.status_bayar == 'Batal' %}selected{% endif %}>Batal</option>
+                </select>
+              </form>
+            </td>
+            <td>
+              <a href="{{ url_for('member.receipt', id_booking=b.id_booking) }}" class="btn btn-outline btn-sm" target="_blank">
+                Struk PDF
+              </a>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+              Tidak ada data booking yang cocok dengan filter ini.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

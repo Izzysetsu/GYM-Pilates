@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Member - Zenith Pilates & Gym Studio{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <span class="badge" style="background: rgba(78, 135, 115, 0.2); color: var(--sage-light); border: 1px solid rgba(78, 135, 115, 0.4); margin-bottom: 0.5rem;">
+      Portal Pelanggan
+    </span>
+    <h1 style="font-size: 2.2rem;">Halo, {{ current_user.nama_lengkap }} 👋</h1>
+    <p style="color: var(--text-muted);">Pantau status keanggotaan, jadwal sesi aktif, dan riwayat presensi latihan Anda.</p>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="{{ url_for('member.packages') }}" class="btn btn-outline btn-sm">Beli Paket Sesi</a>
+    <a href="{{ url_for('member.book') }}" class="btn btn-primary btn-sm">+ Booking Jadwal</a>
+  </div>
+</div>
+
+<!-- Statistik Ringkas Member -->
+<div class="grid grid-cols-4" style="margin-bottom: 3rem;">
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Total Pemesanan</div>
+    <div style="font-size: 2rem; font-weight: 800; color: #FFF;">{{ total_bookings }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Semua riwayat booking</div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Menunggu Bayar</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--amber-warn);">{{ pending_bookings }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Perlu diverifikasi</div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Sesi Lunas</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--sage-light);">{{ lunas_bookings }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Siap dihadiri</div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div style="color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;">Kehadiran Selesai</div>
+    <div style="font-size: 2rem; font-weight: 800; color: var(--gold-light);">{{ total_hadir }}</div>
+    <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Presensi terkonfirmasi</div>
+  </div>
+</div>
+
+<!-- Sesi Latihan Mendatang -->
+<div style="margin-bottom: 3.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="font-size: 1.4rem;">📅 Jadwal Sesi Mendatang Anda</h3>
+    <a href="{{ url_for('member.bookings') }}" class="btn btn-outline btn-sm">Lihat Semua Riwayat</a>
+  </div>
+
+  {% if upcoming %}
+    <div class="grid grid-cols-2">
+      {% for b in upcoming %}
+        <div class="glass-panel" style="padding: 1.75rem; border-left: 4px solid var(--sage-light);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+            <div>
+              <span class="badge badge-lunas" style="margin-bottom: 0.5rem;">Lunas & Terjadwal</span>
+              <h4 style="font-size: 1.25rem; color: #FFF;">{{ b.package.nama_paket }}</h4>
+            </div>
+            <a href="{{ url_for('member.receipt', id_booking=b.id_booking) }}" class="btn btn-outline btn-sm" target="_blank">
+              🧾 Struk PDF
+            </a>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1rem; font-size: 0.9rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="color: var(--text-dim);">Tanggal:</span>
+              <strong style="color: var(--gold-light);">{{ b.schedule.formatted_tanggal }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span style="color: var(--text-dim);">Pukul:</span>
+              <strong>{{ b.schedule.formatted_jam }} WIB</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-dim);">Instruktur:</span>
+              <strong>{{ b.schedule.instruktur }}</strong>
+            </div>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center;">
+            <span>Kode Tiket: <strong>{{ b.kode_booking }}</strong></span>
+            <span>Tunjukkan kode tiket saat tiba di studio</span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="glass-panel" style="padding: 2.5rem; text-align: center;">
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">Anda belum memiliki jadwal sesi latihan aktif yang akan datang.</p>
+      <a href="{{ url_for('member.book') }}" class="btn btn-primary btn-sm">Pilih Jadwal Sekarang</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Riwayat Pemesanan Terkini -->
+<div>
+  <h3 style="font-size: 1.4rem; margin-bottom: 1.25rem;">Aktivitas Booking Terakhir</h3>
+  <div class="glass-panel" style="overflow: hidden;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Kode Booking</th>
+            <th>Paket</th>
+            <th>Jadwal Sesi</th>
+            <th>Biaya</th>
+            <th>Status Bayar</th>
+            <th>Presensi</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in recent_bookings %}
+            <tr>
+              <td><strong>{{ b.kode_booking }}</strong></td>
+              <td>{{ b.package.nama_paket }}</td>
+              <td>
+                <div>{{ b.schedule.formatted_tanggal }}</div>
+                <small style="color: var(--text-dim);">{{ b.schedule.formatted_jam }} WIB &bull; {{ b.schedule.instruktur }}</small>
+              </td>
+              <td>{{ b.package.formatted_harga }}</td>
+              <td>
+                {% if b.status_bayar == 'Pending' %}
+                  <span class="badge badge-pending">Pending</span>
+                {% elif b.status_bayar == 'Lunas' %}
+                  <span class="badge badge-lunas">Lunas</span>
+                {% else %}
+                  <span class="badge badge-batal">Batal</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if b.is_attended %}
+                  <span class="badge badge-hadir">Hadir</span>
+                {% else %}
+                  <span style="color: var(--text-dim); font-size: 0.85rem;">-</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <a href="{{ url_for('member.receipt', id_booking=b.id_booking) }}" class="btn btn-outline btn-sm" target="_blank">
+                    Struk
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+                Belum ada transaksi pemesanan.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

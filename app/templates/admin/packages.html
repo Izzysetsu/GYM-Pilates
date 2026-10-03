@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Paket Latihan - Admin Zenith Studio{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Manajemen Paket Latihan</h1>
+    <p style="color: var(--text-muted);">Tambah, perbarui rincian harga, kuota sesi, dan deskripsi paket gym-pilates.</p>
+  </div>
+  <button type="button" class="btn btn-primary btn-sm" onclick="openModal('addPkgModal')">
+    + Tambah Paket Baru
+  </button>
+</div>
+
+<div class="glass-panel" style="overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nama Paket</th>
+          <th>Harga (Rp)</th>
+          <th>Kuota Sesi</th>
+          <th>Deskripsi Fasilitas</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pkg in packages %}
+          <tr>
+            <td>#{{ pkg.id_paket }}</td>
+            <td><strong style="color: #FFF;">{{ pkg.nama_paket }}</strong></td>
+            <td><strong style="color: var(--gold-light);">{{ pkg.formatted_harga }}</strong></td>
+            <td><span class="badge" style="background: rgba(255,255,255,0.06); color: var(--gold-light);">{{ pkg.kuota_sesi }} Sesi</span></td>
+            <td style="max-width: 320px; color: var(--text-muted); font-size: 0.85rem;">
+              {{ pkg.deskripsi or "-" }}
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openEditPkgModal('{{ pkg.id_paket }}', '{{ pkg.nama_paket }}', '{{ pkg.harga }}', '{{ pkg.kuota_sesi }}', `{{ pkg.deskripsi or '' }}`)">
+                  Edit
+                </button>
+                <form method="POST" action="{{ url_for('admin.delete_package', id_paket=pkg.id_paket) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus paket {{ pkg.nama_paket }}?');">
+                  <button type="submit" class="btn btn-danger btn-sm">
+                    Hapus
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+              Belum ada paket yang terdaftar.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Tambah Paket -->
+<div id="addPkgModal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.3rem;">Tambah Paket Latihan Baru</h3>
+      <button type="button" onclick="closeModal('addPkgModal')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.5rem;">&times;</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.add_package') }}">
+      <div class="form-group">
+        <label class="form-label">Nama Paket</label>
+        <input type="text" name="nama_paket" class="form-control" placeholder="Contoh: Paket Reformer Pilates 4 Sesi" required>
+      </div>
+
+      <div class="grid grid-cols-2" style="gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Harga Paket (Rp)</label>
+          <input type="number" name="harga" class="form-control" placeholder="600000" min="0" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kuota Sesi</label>
+          <input type="number" name="kuota_sesi" class="form-control" placeholder="4" min="1" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Deskripsi & Fasilitas</label>
+        <textarea name="deskripsi" class="form-control" placeholder="Rincian fasilitas, masa berlaku, dan ketentuan latihan..."></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-outline" onclick="closeModal('addPkgModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan Paket</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit Paket -->
+<div id="editPkgModal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.3rem;">Perbarui Data Paket</h3>
+      <button type="button" onclick="closeModal('editPkgModal')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.5rem;">&times;</button>
+    </div>
+
+    <form id="editPkgForm" method="POST" action="">
+      <div class="form-group">
+        <label class="form-label">Nama Paket</label>
+        <input type="text" id="edit_nama_paket" name="nama_paket" class="form-control" required>
+      </div>
+
+      <div class="grid grid-cols-2" style="gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Harga Paket (Rp)</label>
+          <input type="number" id="edit_harga" name="harga" class="form-control" min="0" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kuota Sesi</label>
+          <input type="number" id="edit_kuota_sesi" name="kuota_sesi" class="form-control" min="1" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Deskripsi & Fasilitas</label>
+        <textarea id="edit_deskripsi" name="deskripsi" class="form-control"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+        <button type="button" class="btn btn-outline" onclick="closeModal('editPkgModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openEditPkgModal(id, nama, harga, kuota, deskripsi) {
+    document.getElementById('editPkgForm').action = "/admin/packages/" + id + "/edit";
+    document.getElementById('edit_nama_paket').value = nama;
+    document.getElementById('edit_harga').value = parseInt(harga);
+    document.getElementById('edit_kuota_sesi').value = kuota;
+    document.getElementById('edit_deskripsi').value = deskripsi;
+    openModal('editPkgModal');
+  }
+</script>
+{% endblock %}

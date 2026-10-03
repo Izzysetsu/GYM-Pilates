@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Struk Transaksi #{{ booking.kode_booking }} - Zenith Studio</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      background: #0E1217;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Controls (Hidden on Print) -->
+  <div class="no-print" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+    <button onclick="window.print()" class="btn btn-primary">
+      🖨️ Cetak / Simpan PDF
+    </button>
+    <button onclick="window.close()" class="btn btn-outline">
+      Tutup Halaman
+    </button>
+  </div>
+
+  <!-- Receipt Paper Container -->
+  <div class="receipt-wrapper">
+    <div class="receipt-header">
+      <h2>ZENITH STUDIO</h2>
+      <p style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #4B5563;">Pilates & Gym Wellness</p>
+      <p>Jl. TB Simatupang No. 88, Jakarta Selatan</p>
+      <p>Telp: (021) 781-9900 &bull; WhatsApp: 0812-9900-1122</p>
+      <p style="font-size: 0.75rem; margin-top: 0.35rem; color: #9CA3AF;">NPWP: 81.234.567.8-012.000</p>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #6B7280; font-weight: 700;">BUKTI PEMBAYARAN & RESERVASI</div>
+      <div style="font-size: 1.25rem; font-weight: 800; color: #111827; letter-spacing: 0.5px; margin-top: 0.2rem;">
+        {{ booking.kode_booking }}
+      </div>
+    </div>
+
+    <!-- Metadata Pemesan -->
+    <div class="receipt-row">
+      <span class="label">Tanggal Booking:</span>
+      <span class="value">{{ booking.tanggal_booking.strftime('%d/%m/%Y %H:%M') }}</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Nama Pelanggan:</span>
+      <span class="value">{{ booking.user.nama_lengkap }}</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Email:</span>
+      <span class="value">{{ booking.user.email }}</span>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Detail Layanan & Sesi -->
+    <div class="receipt-row">
+      <span class="label">Paket Layanan:</span>
+      <span class="value">{{ booking.package.nama_paket }}</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Jumlah Kuota:</span>
+      <span class="value">{{ booking.package.kuota_sesi }} Sesi Pertemuan</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Tanggal Sesi:</span>
+      <span class="value">{{ booking.schedule.formatted_tanggal }}</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Waktu Latihan:</span>
+      <span class="value">{{ booking.schedule.formatted_jam }} WIB</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Instruktur:</span>
+      <span class="value">Coach {{ booking.schedule.instruktur }}</span>
+    </div>
+
+    <div class="receipt-divider"></div>
+
+    <!-- Total Biaya & Status -->
+    <div class="receipt-row">
+      <span class="label">Harga Satuan:</span>
+      <span class="value">{{ booking.package.formatted_harga }}</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Pajak (PPN 0%):</span>
+      <span class="value">Rp 0</span>
+    </div>
+    <div class="receipt-total">
+      <span>TOTAL BAYAR</span>
+      <span>{{ booking.package.formatted_harga }}</span>
+    </div>
+
+    <!-- Status Stempel -->
+    <div style="text-align: center; margin-top: 1.5rem;">
+      {% if booking.status_bayar == 'Lunas' %}
+        <div class="stamp-lunas">L U N A S</div>
+        <div style="font-size: 0.75rem; color: #059669; margin-top: 0.4rem; font-weight: 600;">
+          Diverifikasi & Sah oleh Admin Studio
+        </div>
+      {% elif booking.status_bayar == 'Pending' %}
+        <div style="display: inline-block; padding: 0.35rem 1.2rem; border: 3px solid #D97706; color: #D97706; font-weight: 800; border-radius: 6px; letter-spacing: 2px;">
+          MENUNGGU BAYAR
+        </div>
+        <div style="font-size: 0.75rem; color: #D97706; margin-top: 0.4rem;">
+          Harap selesaikan pembayaran untuk konfirmasi slot
+        </div>
+      {% else %}
+        <div style="display: inline-block; padding: 0.35rem 1.2rem; border: 3px solid #DC2626; color: #DC2626; font-weight: 800; border-radius: 6px; letter-spacing: 2px;">
+          BATAL
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Barcode Simulasi & Ketentuan -->
+    <div style="text-align: center; margin-top: 2rem; border-top: 1px dashed #D1D5DB; padding-top: 1.25rem;">
+      <div style="font-family: monospace; font-size: 1.2rem; letter-spacing: 4px; font-weight: 700; color: #374151;">
+        ||| | |||| || ||| | || |||| |
+      </div>
+      <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.25rem;">
+        {{ booking.kode_booking }}
+      </div>
+
+      <div style="font-size: 0.75rem; color: #9CA3AF; margin-top: 1rem; line-height: 1.4;">
+        Harap hadir di studio 10 menit sebelum jam latihan dimulai.<br>
+        Tunjukkan struk ini kepada resepsionis untuk verifikasi absensi.
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

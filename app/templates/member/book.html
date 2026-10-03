@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Reservasi Jadwal Latihan - Zenith Studio{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('member.packages') }}" style="color: var(--text-dim); text-decoration: none; font-size: 0.85rem;">
+      &larr; Kembali ke Katalog Paket
+    </a>
+    <h1 style="font-size: 2.2rem; margin-top: 0.5rem;">Reservasi Sesi & Jadwal Latihan</h1>
+    <p style="color: var(--text-muted);">Pilih paket latihan yang Anda inginkan dan tentukan jadwal sesi yang masih tersedia.</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('member.book') }}">
+    <!-- Langkah 1: Pilih Paket -->
+    <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="background: var(--gradient-gold); color: #111; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">1</span>
+        Pilih Paket Latihan
+      </h3>
+
+      <div class="grid grid-cols-2" style="gap: 1rem;">
+        {% for pkg in packages %}
+          <label style="display: block; cursor: pointer;">
+            <input type="radio" name="id_paket" value="{{ pkg.id_paket }}" style="display: none;" {% if selected_pkg_id == pkg.id_paket or loop.first %}checked{% endif %} onchange="updateSummary()">
+            <div class="pkg-card" style="border: 2px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; background: rgba(255,255,255,0.02); transition: all 0.2s ease;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="color: #FFF; font-size: 1.05rem;">{{ pkg.nama_paket }}</strong>
+                <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--gold-light);">{{ pkg.kuota_sesi }} Sesi</span>
+              </div>
+              <div style="font-size: 1.2rem; font-weight: 700; color: var(--gold-light); margin-bottom: 0.25rem;">
+                {{ pkg.formatted_harga }}
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-dim); line-height: 1.4;">
+                {{ pkg.deskripsi or "Sesi pilates & gym berfasilitas lengkap." }}
+              </div>
+            </div>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Langkah 2: Pilih Jadwal -->
+    <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="background: var(--gradient-gold); color: #111; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">2</span>
+        Pilih Jadwal Latihan Tersedia
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        {% for sch in schedules %}
+          <label style="display: block; {% if sch.is_full %}opacity: 0.5; cursor: not-allowed;{% else %}cursor: pointer;{% endif %}">
+            <input type="radio" name="id_jadwal" value="{{ sch.id_jadwal }}" style="display: none;" {% if sch.is_full %}disabled{% else %}{% if loop.first and not sch.is_full %}checked{% endif %}{% endif %} onchange="updateSummary()">
+            <div class="sch-card" style="border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.1rem 1.4rem; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;">
+              <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div style="min-width: 110px;">
+                  <div style="font-weight: 700; color: var(--gold-light);">{{ sch.formatted_tanggal }}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-dim);">Pukul {{ sch.formatted_jam }} WIB</div>
+                </div>
+                <div>
+                  <div style="font-size: 0.95rem; font-weight: 600;">Instruktur: {{ sch.instruktur }}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-dim);">Studio Pilates A (Reformer)</div>
+                </div>
+              </div>
+
+              <div>
+                {% if sch.is_full %}
+                  <span class="badge badge-batal">Penuh ({{ sch.kapasitas_maks }}/{{ sch.kapasitas_maks }})</span>
+                {% else %}
+                  <span class="badge badge-lunas">Sisa {{ sch.available_slots }} dari {{ sch.kapasitas_maks }} slot</span>
+                {% endif %}
+              </div>
+            </div>
+          </label>
+        {% else %}
+          <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Tidak ada jadwal sesi yang aktif saat ini.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Konfirmasi & Submit -->
+    <div class="glass-panel" style="padding: 1.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700;">Status Pembayaran Awal</div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: var(--amber-warn);">Pending (Verifikasi Pembayaran)</div>
+        <small style="color: var(--text-dim);">Struk resmi dan slot tiket akan terbit setelah pembayaran diverifikasi.</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="padding: 0.85rem 2.2rem; font-size: 1rem;">
+        Konfirmasi Booking Sesi &rarr;
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function updateCardStyles() {
+    // Style package cards
+    document.querySelectorAll('input[name="id_paket"]').forEach(radio => {
+      const card = radio.nextElementSibling;
+      if (radio.checked) {
+        card.style.borderColor = 'var(--gold-primary)';
+        card.style.background = 'rgba(212, 175, 95, 0.08)';
+      } else {
+        card.style.borderColor = 'var(--border-subtle)';
+        card.style.background = 'rgba(255,255,255,0.02)';
+      }
+    });
+
+    // Style schedule cards
+    document.querySelectorAll('input[name="id_jadwal"]').forEach(radio => {
+      const card = radio.nextElementSibling;
+      if (radio.checked) {
+        card.style.borderColor = 'var(--gold-primary)';
+        card.style.background = 'rgba(212, 175, 95, 0.08)';
+      } else {
+        card.style.borderColor = 'var(--border-subtle)';
+        card.style.background = 'rgba(255,255,255,0.02)';
+      }
+    });
+  }
+
+  function updateSummary() {
+    updateCardStyles();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCardStyles();
+  });
+</script>
+{% endblock %}

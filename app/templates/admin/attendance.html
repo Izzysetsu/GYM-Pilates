@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Absensi Kehadiran Studio - Admin Zenith Studio{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <span class="badge" style="background: rgba(78, 135, 115, 0.2); color: var(--sage-light); border: 1px solid rgba(78, 135, 115, 0.4); margin-bottom: 0.5rem;">
+      Check-in Resepsionis
+    </span>
+    <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Absensi & Presensi Kehadiran Member</h1>
+    <p style="color: var(--text-muted);">Validasi kedatangan member saat tiba di studio berdasarkan tiket booking lunas.</p>
+  </div>
+
+  <!-- Filter Tanggal Sesi -->
+  <form method="GET" action="{{ url_for('admin.attendance') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+    <input type="date" name="tanggal" value="{{ target_date.strftime('%Y-%m-%d') }}" class="form-control" style="padding: 0.5rem 0.8rem; font-size: 0.875rem;" onchange="this.form.submit()">
+    <a href="{{ url_for('admin.attendance') }}" class="btn btn-outline btn-sm">Hari Ini</a>
+  </form>
+</div>
+
+<div class="glass-panel" style="overflow: hidden;">
+  <div style="padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <strong style="color: var(--gold-light);">Daftar Kehadiran Sesi: {{ target_date.strftime('%d %B %Y') }}</strong>
+      <div style="font-size: 0.8rem; color: var(--text-dim);">Hanya menampilkan pemesanan berstatus "Lunas"</div>
+    </div>
+    <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-muted);">
+      {{ bookings|length }} Peserta Terdaftar
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Kode Booking</th>
+          <th>Nama Member</th>
+          <th>Jam Sesi & Instruktur</th>
+          <th>Paket Latihan</th>
+          <th>Status Presensi</th>
+          <th>Waktu Validasi</th>
+          <th>Aksi Absensi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+          <tr>
+            <td>
+              <strong style="color: var(--gold-light);">{{ b.kode_booking }}</strong>
+            </td>
+            <td>
+              <strong style="color: #FFF;">{{ b.user.nama_lengkap }}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-dim);">{{ b.user.email }}</div>
+            </td>
+            <td>
+              <div style="font-weight: 600;">{{ b.schedule.formatted_jam }} WIB</div>
+              <small style="color: var(--text-dim);">Coach {{ b.schedule.instruktur }}</small>
+            </td>
+            <td>
+              <div>{{ b.package.nama_paket }}</div>
+            </td>
+            <td>
+              {% if b.is_attended %}
+                <span class="badge badge-lunas">✓ Hadir di Studio</span>
+              {% else %}
+                <span class="badge badge-pending">Belum Check-in</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if b.is_attended and b.attendance.waktu_hadir %}
+                <span style="color: var(--text-muted); font-size: 0.85rem;">
+                  {{ b.attendance.waktu_hadir.strftime('%H:%M:%S WIB') }}
+                </span>
+              {% else %}
+                <span style="color: var(--text-dim); font-size: 0.85rem;">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if b.is_attended %}
+                <form method="POST" action="{{ url_for('admin.mark_attendance', id_booking=b.id_booking) }}">
+                  <input type="hidden" name="status_hadir" value="Tidak Hadir">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color: var(--crimson-red); border-color: rgba(217,83,79,0.3);">
+                    Batalkan Hadir
+                  </button>
+                </form>
+              {% else %}
+                <form method="POST" action="{{ url_for('admin.mark_attendance', id_booking=b.id_booking) }}">
+                  <input type="hidden" name="status_hadir" value="Hadir">
+                  <button type="submit" class="btn btn-sage btn-sm">
+                    ✓ Tandai Hadir
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+              Tidak ada jadwal booking yang terkonfirmasi lunas pada tanggal {{ target_date.strftime('%d %B %Y') }}.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

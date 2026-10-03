@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Daftar Member Baru - Zenith Pilates & Gym Studio{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 3rem auto;">
+  <div class="glass-panel" style="padding: 2.5rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Registrasi Member</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Daftarkan diri Anda untuk mulai memilih paket dan reservasi sesi latihan</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}">
+      <div class="form-group">
+        <label class="form-label" for="nama_lengkap">Nama Lengkap</label>
+        <input type="text" id="nama_lengkap" name="nama_lengkap" class="form-control" placeholder="Contoh: Rifan Betra" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Alamat Email</label>
+        <input type="email" id="email" name="email" class="form-control" placeholder="contoh@domain.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="Minimal 6 karakter" required minlength="6">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirm_password">Ulangi Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Ketik ulang password Anda" required minlength="6">
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.85rem;">
+        Selesaikan Pendaftaran
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.875rem; color: var(--text-dim);">
+      Sudah memiliki akun terdaftar?
+      <a href="{{ url_for('auth.login') }}" style="color: var(--gold-light); text-decoration: none; font-weight: 600;">
+        Masuk di sini
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

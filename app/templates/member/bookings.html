@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Riwayat Pemesanan & Struk - Zenith Studio{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Riwayat Pemesanan & Struk</h1>
+    <p style="color: var(--text-muted);">Pantau status transaksi, bayar pemesanan tertunda, dan unduh struk resmi.</p>
+  </div>
+  <a href="{{ url_for('member.book') }}" class="btn btn-primary btn-sm">+ Buat Booking Baru</a>
+</div>
+
+<!-- Filter Status Tabs -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <a href="{{ url_for('member.bookings') }}" class="btn btn-sm {% if not active_status %}btn-primary{% else %}btn-outline{% endif %}">
+    Semua
+  </a>
+  <a href="{{ url_for('member.bookings', status='Pending') }}" class="btn btn-sm {% if active_status == 'Pending' %}btn-primary{% else %}btn-outline{% endif %}">
+    Menunggu Bayar (Pending)
+  </a>
+  <a href="{{ url_for('member.bookings', status='Lunas') }}" class="btn btn-sm {% if active_status == 'Lunas' %}btn-primary{% else %}btn-outline{% endif %}">
+    Lunas & Terjadwal
+  </a>
+  <a href="{{ url_for('member.bookings', status='Batal') }}" class="btn btn-sm {% if active_status == 'Batal' %}btn-primary{% else %}btn-outline{% endif %}">
+    Dibatalkan
+  </a>
+</div>
+
+<div class="glass-panel" style="overflow: hidden;">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID / Kode Booking</th>
+          <th>Waktu Order</th>
+          <th>Paket Latihan</th>
+          <th>Jadwal Sesi</th>
+          <th>Total Tagihan</th>
+          <th>Status Bayar</th>
+          <th>Presensi</th>
+          <th>Aksi & Struk</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+          <tr>
+            <td>
+              <strong style="color: var(--gold-light);">{{ b.kode_booking }}</strong>
+            </td>
+            <td>
+              <small style="color: var(--text-muted);">{{ b.tanggal_booking.strftime('%d/%m/%Y %H:%M') }}</small>
+            </td>
+            <td>
+              <div>{{ b.package.nama_paket }}</div>
+              <small style="color: var(--text-dim);">{{ b.package.kuota_sesi }} Sesi</small>
+            </td>
+            <td>
+              <div style="font-weight: 600;">{{ b.schedule.formatted_tanggal }}</div>
+              <small style="color: var(--text-dim);">Pukul {{ b.schedule.formatted_jam }} WIB &bull; Coach {{ b.schedule.instruktur }}</small>
+            </td>
+            <td>
+              <strong>{{ b.package.formatted_harga }}</strong>
+            </td>
+            <td>
+              {% if b.status_bayar == 'Pending' %}
+                <span class="badge badge-pending">Pending</span>
+              {% elif b.status_bayar == 'Lunas' %}
+                <span class="badge badge-lunas">Lunas</span>
+              {% else %}
+                <span class="badge badge-batal">Batal</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if b.is_attended %}
+                <span class="badge badge-hadir">Hadir</span>
+                <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem;">
+                  {{ b.attendance.waktu_hadir.strftime('%H:%M WIB') }}
+                </div>
+              {% else %}
+                <span style="color: var(--text-dim); font-size: 0.85rem;">Belum Hadir</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                {% if b.status_bayar == 'Pending' %}
+                  <button type="button" class="btn btn-sage btn-sm" onclick="openPayModal('{{ b.id_booking }}', '{{ b.kode_booking }}', '{{ b.package.formatted_harga }}')">
+                    Konfirmasi Bayar
+                  </button>
+                {% endif %}
+                <a href="{{ url_for('member.receipt', id_booking=b.id_booking) }}" class="btn btn-outline btn-sm" target="_blank">
+                  Lihat Struk
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+              Tidak ada data booking dengan filter ini.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Konfirmasi Pembayaran -->
+<div id="payModal" class="modal-overlay">
+  <div class="modal-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1.3rem;">Konfirmasi Pembayaran</h3>
+      <button type="button" onclick="closeModal('payModal')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.5rem;">&times;</button>
+    </div>
+
+    <form id="payForm" method="POST" action="">
+      <div style="background: rgba(212, 175, 95, 0.08); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+        <div style="font-size: 0.8rem; color: var(--text-dim);">Kode Booking: <strong id="modalKodeBooking" style="color: var(--gold-light);"></strong></div>
+        <div style="font-size: 1.15rem; font-weight: 800; color: #FFF; margin-top: 0.25rem;" id="modalTotalHarga"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Metode Pembayaran</label>
+        <select name="metode" class="form-control">
+          <option value="Transfer Bank BCA (8820-192-888 a.n Zenith Studio)">Transfer Bank BCA - 8820192888</option>
+          <option value="Transfer Bank Mandiri (157-00-8819-221 a.n Zenith Studio)">Transfer Bank Mandiri - 157008819221</option>
+          <option value="QRIS Studio (GoPay, OVO, Dana, ShopeePay)">QRIS All-Payment</option>
+          <option value="Tunai / Kasir di Lokasi">Bayar Tunai di Kasir Studio</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nomor Rekening / Catatan Pengirim</label>
+        <input type="text" name="catatan" class="form-control" placeholder="Contoh: Transfer atas nama Rifan" required>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.75rem;">
+        <button type="button" class="btn btn-outline" onclick="closeModal('payModal')">Batal</button>
+        <button type="submit" class="btn btn-primary">Kirim Bukti / Konfirmasi</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function openPayModal(idBooking, kodeBooking, totalHarga) {
+    document.getElementById('modalKodeBooking').innerText = kodeBooking;
+    document.getElementById('modalTotalHarga').innerText = 'Total: ' + totalHarga;
+    document.getElementById('payForm').action = "/member/booking/" + idBooking + "/pay";
+    openModal('payModal');
+  }
+</script>
+{% endblock %}

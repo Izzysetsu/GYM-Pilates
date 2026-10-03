@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Zenith Pilates & Gym Studio - Kebugaran & Postur Ideal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section style="text-align: center; padding: 4rem 1rem 3rem 1rem; position: relative;">
+  <span class="badge" style="background: rgba(212, 175, 95, 0.15); color: var(--gold-light); border: 1px solid rgba(212, 175, 95, 0.3); margin-bottom: 1.5rem; padding: 0.4rem 1rem;">
+    Studio Kebugaran & Pilates Eksklusif
+  </span>
+  <h1 style="font-size: 3.2rem; line-height: 1.2; max-width: 850px; margin: 0 auto 1.5rem auto; font-family: var(--font-serif);">
+    Bentuk Postur Sempurna & Kekuatan Inti Bersama <span class="text-gradient">Zenith Studio</span>
+  </h1>
+  <p style="font-size: 1.15rem; color: var(--text-muted); max-width: 650px; margin: 0 auto 2.5rem auto;">
+    Layanan latihan Pilates Reformer dan Gym modern dengan instruktur profesional tersertifikasi. Jadwal fleksibel, kuota kelas terjaga, dan pemesanan online mudah.
+  </p>
+  
+  <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+    <a href="{{ url_for('member.packages') }}" class="btn btn-primary" style="padding: 0.9rem 2rem; font-size: 1rem;">
+      Pilih Paket Latihan &rarr;
+    </a>
+    <a href="{{ url_for('member.book') }}" class="btn btn-outline" style="padding: 0.9rem 2rem; font-size: 1rem;">
+      Lihat Jadwal Tersedia
+    </a>
+  </div>
+</section>
+
+<!-- Keunggulan Studio -->
+<section style="margin: 4rem 0;">
+  <div class="grid grid-cols-3">
+    <div class="glass-panel" style="padding: 2rem;">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">✨</div>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--gold-light);">Reformer Pilates Presisi</h3>
+      <p style="color: var(--text-muted); font-size: 0.925rem;">
+        Dilengkapi alat Reformer dan Cadillac berstandar internasional untuk fleksibilitas otot dan pemulihan tulang belakang.
+      </p>
+    </div>
+
+    <div class="glass-panel" style="padding: 2rem;">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">🧘‍♀️</div>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--gold-light);">Instruktur Tersertifikasi</h3>
+      <p style="color: var(--text-muted); font-size: 0.925rem;">
+        Dipandu oleh pelatih berpengalaman yang memantau setiap gerakan agar aman, tepat sasaran, dan mencegah cedera.
+      </p>
+    </div>
+
+    <div class="glass-panel" style="padding: 2rem;">
+      <div style="font-size: 2rem; margin-bottom: 1rem;">📱</div>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--gold-light);">Sistem Reservasi & Struk Digital</h3>
+      <p style="color: var(--text-muted); font-size: 0.925rem;">
+        Booking jadwal favorit secara mandiri tanpa antre, validasi kuota otomatis, dan unduh struk resmi transaksi instan.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Pilihan Paket Populer -->
+<section style="margin: 5rem 0;">
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <h2 style="font-size: 2.2rem; margin-bottom: 0.5rem;">Katalog Paket Pilihan</h2>
+    <p style="color: var(--text-muted);">Pilih paket keanggotaan atau sesi latihan yang sesuai target kebugaran Anda</p>
+  </div>
+
+  <div class="grid grid-cols-3">
+    {% for pkg in packages %}
+      <div class="glass-panel" style="padding: 2.2rem; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+        {% if loop.index == 2 %}
+          <div style="position: absolute; top: -12px; right: 24px; background: var(--gradient-gold); color: #111; font-size: 0.75rem; font-weight: 800; padding: 0.3rem 0.8rem; border-radius: 99px;">
+            PALING FAVORIT
+          </div>
+        {% endif %}
+        <div>
+          <h3 style="font-size: 1.4rem; margin-bottom: 0.75rem; color: #FFF;">{{ pkg.nama_paket }}</h3>
+          <div style="margin-bottom: 1.25rem;">
+            <span style="font-size: 2rem; font-weight: 800; color: var(--gold-light);">{{ pkg.formatted_harga }}</span>
+            <span style="color: var(--text-muted); font-size: 0.85rem;"> / paket</span>
+          </div>
+          <div style="display: inline-block; padding: 0.3rem 0.8rem; background: rgba(255,255,255,0.06); border-radius: 6px; font-size: 0.85rem; margin-bottom: 1.25rem;">
+            🎯 Kuota: <strong>{{ pkg.kuota_sesi }} Sesi Latihan</strong>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 2rem;">
+            {{ pkg.deskripsi or "Akses penuh fasilitas studio dan pendampingan instruktur berkualitas." }}
+          </p>
+        </div>
+
+        <a href="{{ url_for('member.book', package_id=pkg.id_paket) }}" class="btn btn-outline" style="width: 100%;">
+          Pesan Sesi Ini
+        </a>
+      </div>
+    {% else %}
+      <div class="glass-panel" style="grid-column: 1 / -1; padding: 3rem; text-align: center;">
+        <p style="color: var(--text-muted);">Belum ada paket yang terdaftar.</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Jadwal Mendatang -->
+<section style="margin: 5rem 0;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h2 style="font-size: 2rem; margin-bottom: 0.35rem;">Jadwal Kelas Terbuka</h2>
+      <p style="color: var(--text-muted);">Pilih slot waktu latihan dan reservasi sebelum kuota penuh</p>
+    </div>
+    <a href="{{ url_for('member.book') }}" class="btn btn-outline btn-sm">Lihat Semua Jadwal &rarr;</a>
+  </div>
+
+  <div class="grid grid-cols-3">
+    {% for sch in schedules %}
+      <div class="glass-panel" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--gold-light);">{{ sch.formatted_tanggal }}</span>
+            <span class="badge" style="background: rgba(255,255,255,0.06); color: var(--text-muted);">
+              ⏰ {{ sch.formatted_jam }} WIB
+            </span>
+          </div>
+
+          <h4 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Instruktur: {{ sch.instruktur }}</h4>
+
+          <div style="margin: 1rem 0; font-size: 0.875rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: var(--text-dim);">
+              <span>Kapasitas:</span>
+              <strong style="color: {% if sch.is_full %}var(--crimson-red){% else %}var(--sage-light){% endif %};">
+                {{ sch.booked_count }} / {{ sch.kapasitas_maks }} terisi
+              </strong>
+            </div>
+            <!-- Progress bar -->
+            <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 99px; overflow: hidden;">
+              <div style="background: {% if sch.is_full %}var(--crimson-red){% else %}var(--gradient-gold){% endif %}; height: 100%; width: {{ (sch.booked_count / sch.kapasitas_maks) * 100 }}%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          {% if sch.is_full %}
+            <button class="btn btn-outline btn-sm" style="width: 100%; opacity: 0.6; cursor: not-allowed;" disabled>
+              Kuota Penuh
+            </button>
+          {% else %}
+            <a href="{{ url_for('member.book') }}" class="btn btn-sage btn-sm" style="width: 100%;">
+              Booking Sekarang (Sisa {{ sch.available_slots }} slot)
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="glass-panel" style="grid-column: 1 / -1; padding: 2rem; text-align: center;">
+        <p style="color: var(--text-muted);">Belum ada jadwal sesi terbuka saat ini.</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
