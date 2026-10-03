@@ -1,3 +1,4 @@
+import os
 from functools import wraps
 from flask import Flask, session, redirect, url_for, flash, g
 from .config import Config
@@ -37,7 +38,11 @@ def member_required(f):
     return decorated_function
 
 def create_app(config_class=Config):
-    app = Flask(__name__)
+    app_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(app_dir, 'templates')
+    static_dir = os.path.join(app_dir, 'static')
+
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config.from_object(config_class)
 
     # Initialize extensions
@@ -49,11 +54,28 @@ def create_app(config_class=Config):
         if user_id is None:
             g.user = None
         else:
-            g.user = db.session.get(User, user_id)
+            try:
+                g.user = db.session.get(User, user_id)
+            except Exception:
+                g.user = None
 
     @app.context_processor
     def inject_user():
-        return dict(current_user=g.user)
+        return dict(current_user=getattr(g, 'user', None))
+
+    # Health check route
+    @app.route('/health')
+    def health():
+        db_status = "ok"
+        try:
+            db.session.execute(db.text("SELECT 1"))
+        except Exception as e:
+            db_status = f"db error: {str(e)}"
+        return {
+            "status": "healthy",
+            "database": db_status,
+            "database_uri": app.config['SQLALCHEMY_DATABASE_URI'].split('@')[-1] if '@' in app.config['SQLALCHEMY_DATABASE_URI'] else "local"
+        }
 
     # Register blueprints
     from .routes.main import main_bp
@@ -66,7 +88,11 @@ def create_app(config_class=Config):
     app.register_blueprint(member_bp, url_prefix='/member')
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-    with app.app_context():
-        db.create_all()
+    # Aman dari serverless error: jangan crash jika create_all gagal atau tabel sudah ada
+    try:
+        with app.app_context():
+            db.create_all()
+    except Exception as e:
+        print(f"[WARN] db.create_all caught: {e}")
 
     return app
