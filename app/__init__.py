@@ -88,11 +88,6 @@ def create_app(config_class=Config):
     app.register_blueprint(member_bp, url_prefix='/member')
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-    # Aman dari serverless error: jangan crash jika create_all gagal atau tabel sudah ada
-    try:
-        with app.app_context():
-            db.create_all()
-    except Exception as e:
-        print(f"[WARN] db.create_all caught: {e}")
+    # db.create_all() dihilangkan dari runtime serverless karena skema sudah dibuat di Supabase
 
     return app
